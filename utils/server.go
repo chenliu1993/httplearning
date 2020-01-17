@@ -47,7 +47,7 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 			data, _ := ioutil.ReadAll(part)
 			fmt.Printf("FormData:%s\n", string(data))
 		} else {
-			dst, err := os.OpenFile(part.FileName(), os.O_RDWR|os.O_CREATE|os.O_EXCL|os.O_SYNC, 0666)
+			dst, err := os.Create(part.FileName() + ".upload")
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
