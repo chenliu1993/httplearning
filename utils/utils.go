@@ -3,8 +3,10 @@ package utils
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"time"
 )
@@ -87,4 +89,31 @@ func (web *WebClient) Put(url, contentType, token string, data interface{}) (con
 	result, err := ioutil.ReadAll(resp.Body)
 	content = string(result)
 	return content, nil
+}
+
+// GetLocalIP gets the interface's IP.
+// VM's IP.
+func GetLocalIP(ifname string) (string, error) {
+	var localIP = ""
+	iface, err := net.InterfaceByName(ifname)
+	if err != nil {
+		return localIP, err
+	}
+	if iface.Name == ifname {
+		addrs, err := iface.Addrs()
+		if err != nil {
+			return localIP, err
+		}
+		for _, addr := range addrs {
+			if ipnet, ok := addr.(*net.IPNet); ok {
+				if ipnet.IP.To4() != nil {
+					localIP = ipnet.IP.String()
+				}
+			}
+		}
+	}
+	if localIP == "" {
+		return localIP, fmt.Errorf("local interface doesn't have an ip")
+	}
+	return localIP, nil
 }
