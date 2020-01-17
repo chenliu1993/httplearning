@@ -6,12 +6,10 @@ import (
 	"log"
 	"strings"
 
-	"github.com/chenliu1993/httplearn/utils"
+	"github.com/chenliu1993/httplearning/utils"
 )
 
 func main() {
-	// data := `{"email":"cl2037829916@gmail.com",
-	// 			"password":"19930825888abc"}`
 	data := map[string]string{
 		"email":    "cl2037829916@gmail.com",
 		"password": "19930825888abc",
