@@ -65,3 +65,26 @@ func (web *WebClient) Post(url, contentType string, data interface{}) (content s
 	content = string(result)
 	return content, nil
 }
+
+// Put puts resources to server
+func (web *WebClient) Put(url, contentType, token string, data interface{}) (content string, err error) {
+	jsonStr, err := json.Marshal(data)
+	if err != nil {
+		return "", err
+	}
+	req, err := http.NewRequest("PUT", url, bytes.NewBuffer(jsonStr))
+	if err != nil {
+		return "", err
+	}
+	req.Header.Add("content-type", contentType)
+	req.Header.Add("authorization", token)
+	defer req.Body.Close()
+	resp, err := web.Client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	result, err := ioutil.ReadAll(resp.Body)
+	content = string(result)
+	return content, nil
+}
