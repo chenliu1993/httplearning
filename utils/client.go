@@ -2,12 +2,13 @@ package utils
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
+	"mime/multipart"
 	"net"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -33,26 +34,15 @@ func (web *WebClient) Get(url string) (response string, err error) {
 	defer resp.Body.Close()
 	var buffer [512]byte
 	result := bytes.NewBuffer(nil)
-	for {
-		n, err := resp.Body.Read(buffer[0:])
-		if err != nil && err == io.EOF {
-			break
-		} else if err != nil {
-			return "", err
-		}
-		result.Write(buffer[0:n])
-	}
+	n, _ := resp.Body.Read(buffer[0:])
+	result.Write(buffer[0:n])
 	response = result.String()
 	return response, nil
 }
 
 // Post posts a requests to server.
-func (web *WebClient) Post(url, contentType string, data interface{}) (content string, err error) {
-	jsonStr, err := json.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
+func (web *WebClient) Post(url, contentType string, data io.Reader) (content string, err error) {
+	req, err := http.NewRequest("POST", url, data)
 	if err != nil {
 		return "", err
 	}
@@ -69,12 +59,8 @@ func (web *WebClient) Post(url, contentType string, data interface{}) (content s
 }
 
 // Put puts resources to server
-func (web *WebClient) Put(url, contentType, token string, data interface{}) (content string, err error) {
-	jsonStr, err := json.Marshal(data)
-	if err != nil {
-		return "", err
-	}
-	req, err := http.NewRequest("PUT", url, bytes.NewBuffer(jsonStr))
+func (web *WebClient) Put(url, contentType, token string, data io.Reader) (content string, err error) {
+	req, err := http.NewRequest("PUT", url, data)
 	if err != nil {
 		return "", err
 	}
@@ -86,9 +72,50 @@ func (web *WebClient) Put(url, contentType, token string, data interface{}) (con
 		return "", err
 	}
 	defer resp.Body.Close()
+	fmt.Println(resp.Status)
 	result, err := ioutil.ReadAll(resp.Body)
 	content = string(result)
 	return content, nil
+}
+
+// UploadFile uploads file to the server.
+func (web *WebClient) UploadFile(url, path string) error {
+	bodyBuffer := &bytes.Buffer{}
+	bodyWriter := multipart.NewWriter(bodyBuffer)
+	filewriter, err := bodyWriter.CreateFormFile("files", path)
+	if err != nil {
+		return err
+	}
+	file, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	io.Copy(filewriter, file)
+	contentType := bodyWriter.FormDataContentType()
+	bodyWriter.Close()
+	_, err = web.Post(url, contentType, bodyBuffer)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// UploadData uploads map data to server.
+func (web *WebClient) UploadData(url string, data map[string]string) error {
+	bodyBuffer := &bytes.Buffer{}
+	bodyWriter := multipart.NewWriter(bodyBuffer)
+	for key, value := range data {
+		_ = bodyWriter.WriteField(key, value)
+	}
+	contentType := bodyWriter.FormDataContentType()
+	bodyWriter.Close()
+
+	_, err := web.Post(url, contentType, bodyBuffer)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // GetLocalIP gets the interface's IP.
