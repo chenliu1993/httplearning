@@ -12,6 +12,11 @@ import (
 	"time"
 )
 
+const (
+	// DefaultVMPort for server to listen.
+	DefaultVMPort uint32 = 8808
+)
+
 // WebClient wraps the http.Client.
 type WebClient struct {
 	Client http.Client

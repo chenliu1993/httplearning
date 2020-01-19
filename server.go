@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net"
 
@@ -10,7 +11,7 @@ import (
 
 func main() {
 	router := mux.NewRouter()
-	addr := ":8808"
+	addr := fmt.Sprintf(":%d", utils.DefaultVMPort)
 	router.HandleFunc("/helloworld", utils.HelloWorld)
 	router.HandleFunc("/upload", utils.Upload)
 	server := utils.NewServer(router, addr)
