@@ -85,9 +85,9 @@ func (web *WebClient) Put(url, contentType, token string, data io.Reader) (conte
 
 // UploadFile uploads file to the server.
 func (web *WebClient) UploadFile(url, path string) error {
-	bodyBuffer := &bytes.Buffer{}
+	bodyBuffer := bytes.NewBufferString("")
 	bodyWriter := multipart.NewWriter(bodyBuffer)
-	filewriter, err := bodyWriter.CreateFormFile("files", path)
+	_, err := bodyWriter.CreateFormFile("files", path)
 	if err != nil {
 		return err
 	}
@@ -96,10 +96,13 @@ func (web *WebClient) UploadFile(url, path string) error {
 		return err
 	}
 	defer file.Close()
-	io.Copy(filewriter, file)
+	boundary := bodyWriter.Boundary()
+	closeBuf := bytes.NewBufferString(fmt.Sprintf("\r\n--%s--\r\n", boundary))
+
+	requestReader := io.MultiReader(bodyBuffer, file, closeBuf)
 	contentType := bodyWriter.FormDataContentType()
 	bodyWriter.Close()
-	_, err = web.Post(url, contentType, bodyBuffer)
+	_, err = web.Post(url, contentType, requestReader)
 	if err != nil {
 		return err
 	}
