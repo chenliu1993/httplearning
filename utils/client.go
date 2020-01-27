@@ -126,6 +126,18 @@ func (web *WebClient) UploadData(url string, data map[string]string) error {
 	return nil
 }
 
+// InfoAboutMe requires info about me.
+func (web *WebClient) InfoAboutMe(url string) (string, error) {
+	bodyBuffer := &bytes.Buffer{}
+	bodyBuffer.Write([]byte("requires my resume"))
+	contentType := "text/plain"
+	content, err := web.Post(url, contentType, bodyBuffer)
+	if err != nil {
+		return "", err
+	}
+	return content, nil
+}
+
 // GetLocalIP gets the interface's IP.
 // VM's IP.
 func GetLocalIP(ifname string) (string, error) {

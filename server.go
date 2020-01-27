@@ -15,6 +15,7 @@ func main() {
 	addr := fmt.Sprintf(":%d", utils.DefaultVMPort)
 	router.HandleFunc("/helloworld", utils.HelloWorld)
 	router.HandleFunc("/upload", utils.Upload)
+	router.HandleFunc("/me", utils.Me)
 	router.Handle("/tmp", http.StripPrefix("/tmp", http.FileServer(http.Dir("/home/cliu2/Documents/tmp"))))
 	server := utils.NewServer(router, addr)
 	listener, err := net.Listen("tcp", addr)

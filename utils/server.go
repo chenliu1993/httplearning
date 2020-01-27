@@ -57,3 +57,22 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
+
+// Me returns my info.
+func Me(w http.ResponseWriter, r *http.Request) {
+	// if r.Header.Get("resume") == "" {
+	// 	http.Error(w, fmt.Errorf("wrong request header").Error(), http.StatusBadRequest)
+	// 	return
+	// }
+	meinfo, err := ioutil.ReadFile("/Users/cliu2/Documents/gopath/src/github.com/chenliu1993/my.pdf.asc")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	_, err = w.Write(meinfo)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
