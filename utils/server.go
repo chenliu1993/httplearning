@@ -76,3 +76,18 @@ func Me(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusOK)
 }
+
+// GetPublicKey gets my private key.
+func GetPublicKey(w http.ResponseWriter, r *http.Request) {
+	mykey, err := ioutil.ReadFile("/Users/cliu2/Documents/gopath/src/github.com/chenliu1993/httplearning/my.key")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	_, err = w.Write(mykey)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}

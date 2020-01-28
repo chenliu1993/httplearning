@@ -16,6 +16,7 @@ func main() {
 	router.HandleFunc("/helloworld", utils.HelloWorld)
 	router.HandleFunc("/upload", utils.Upload)
 	router.HandleFunc("/me", utils.Me)
+	router.HandleFunc("/publickey", utils.GetPublicKey)
 	router.Handle("/tmp", http.StripPrefix("/tmp", http.FileServer(http.Dir("/home/cliu2/Documents/tmp"))))
 	server := utils.NewServer(router, addr)
 	listener, err := net.Listen("tcp", addr)

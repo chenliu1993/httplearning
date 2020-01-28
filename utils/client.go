@@ -138,6 +138,18 @@ func (web *WebClient) InfoAboutMe(url string) (string, error) {
 	return content, nil
 }
 
+// GetKey gets key for decrypt my resume.
+func (web *WebClient) GetKey(url string) (string, error) {
+	bodyBuffer := &bytes.Buffer{}
+	bodyBuffer.Write([]byte("requires my key"))
+	contentType := "text/plain"
+	content, err := web.Post(url, contentType, bodyBuffer)
+	if err != nil {
+		return "", err
+	}
+	return content, nil
+}
+
 // GetLocalIP gets the interface's IP.
 // VM's IP.
 func GetLocalIP(ifname string) (string, error) {

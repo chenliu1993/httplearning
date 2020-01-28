@@ -24,7 +24,7 @@ func main() {
 	if err := client.UploadData(addr+"/upload", user); err != nil {
 		log.Fatal(err)
 	}
-	content, err := client.InfoAboutMe("http://me.liuchen.work/me")
+	content, err := client.InfoAboutMe(addr + "/me")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -34,6 +34,11 @@ func main() {
 	// }
 	// defer f.Close()
 	// f.Write([]byte(content))
+	fmt.Printf("response content is:\n%s\n", content)
+	content, err = client.InfoAboutMe(addr + "/publickey")
+	if err != nil {
+		log.Fatal(err)
+	}
 	fmt.Printf("response content is:\n%s\n", content)
 	return
 }
