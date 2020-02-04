@@ -2,9 +2,12 @@ package utils
 
 import (
 	"bytes"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"mime/multipart"
 	"net"
 	"net/http"
@@ -28,6 +31,40 @@ func NewClient() *WebClient {
 	return &WebClient{
 		Client: client,
 	}
+}
+
+// AddVerification adds client-end certs for double verify and also
+func (web *WebClient) AddVerification(skip bool, caCrtPath, cliCrtPath, cliKeyPath string) {
+	pool := x509.NewCertPool()
+	// First add caCrt for server-end to verify.
+	caCrt, err := ioutil.ReadFile(caCrtPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	pool.AppendCertsFromPEM(caCrt)
+	// Second Loads client-end key and cert.
+	cliCrt, err := tls.LoadX509KeyPair(cliCrtPath, cliKeyPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	var transport *http.Transport
+	if skip {
+		transport = &http.Transport{
+			TLSClientConfig: &tls.Config{
+				RootCAs:            pool,
+				Certificates:       []tls.Certificate{cliCrt},
+				InsecureSkipVerify: true,
+			},
+		}
+	} else {
+		transport = &http.Transport{
+			TLSClientConfig: &tls.Config{
+				RootCAs:      pool,
+				Certificates: []tls.Certificate{cliCrt},
+			},
+		}
+	}
+	web.Client.Transport = transport
 }
 
 // Get implements the get method.

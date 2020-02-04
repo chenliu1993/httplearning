@@ -1,9 +1,12 @@
 package utils
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 
@@ -25,9 +28,33 @@ func NewServer(router *mux.Router, addr string) *WebServer {
 	}
 }
 
+// VerifyClient add SSL and certificate.
+func (server *WebServer) VerifyClient(crtPath string, doubleVerify bool) {
+	pool := x509.NewCertPool()
+	caCrt, err := ioutil.ReadFile(crtPath)
+	if err != nil {
+		log.Fatal(err)
+	}
+	pool.AppendCertsFromPEM(caCrt)
+	var tlsconfig *tls.Config
+	if doubleVerify {
+		tlsconfig = &tls.Config{
+			ClientCAs:  pool,
+			ClientAuth: tls.RequireAndVerifyClientCert,
+		}
+	} else {
+		tlsconfig = &tls.Config{
+			ClientCAs: pool,
+		}
+	}
+	server.Server.TLSConfig = tlsconfig
+}
+
 // HelloWorld is the test hanlder function for server.
 func HelloWorld(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Hello World from golang http!")
+	w.WriteHeader(http.StatusOK)
+	log.Printf("Hello World")
 }
 
 // Upload uploads content to server.
@@ -56,6 +83,8 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 			io.Copy(dst, part)
 		}
 	}
+	w.WriteHeader(http.StatusOK)
+	log.Println("upload")
 }
 
 // Me returns my info.
@@ -75,9 +104,11 @@ func Me(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "text/plain")
+	log.Println("me")
 }
 
-// GetPublicKey gets my private key.
+// GetPublicKey gets my public key.
 func GetPublicKey(w http.ResponseWriter, r *http.Request) {
 	mykey, err := ioutil.ReadFile("/Users/cliu2/Documents/gopath/src/github.com/chenliu1993/httplearning/my.key")
 	if err != nil {
@@ -90,4 +121,15 @@ func GetPublicKey(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "text/plain")
+	log.Println("key")
+}
+
+// RequestLog records the request info
+func RequestLog(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Println("request received")
+		next.ServeHTTP(w, r)
+		log.Println("request served done")
+	})
 }
