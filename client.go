@@ -10,7 +10,7 @@ import (
 func main() {
 	client := utils.NewClient()
 	// Deals with client tls.
-	client.AddVerification(false, "ca.crt", "client.crt", "client.key")
+	// client.AddVerification(false, "ca.crt", "client.crt", "client.key")
 	user := make(map[string]string)
 	user["lisa"] = "1"
 	addr := "http://127.0.0.1:8808"

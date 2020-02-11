@@ -20,8 +20,8 @@ func main() {
 	router.Handle("/publickey", alice.New(utils.RequestLog).Then(http.HandlerFunc(utils.GetPublicKey)))
 	router.Handle("/tmp", alice.New(utils.RequestLog).Then(http.StripPrefix("/tmp", http.FileServer(http.Dir("/home/cliu2/Documents/tmp")))))
 	server := utils.NewServer(router, addr)
-	// Dealing with verifiying
-	server.VerifyClient("ca.crt", false)
+	// // Dealing with verifiying
+	// server.VerifyClient("ca.crt", false)
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
 		log.Fatal(err)
