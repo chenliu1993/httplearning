@@ -134,14 +134,24 @@ func (web *WebClient) UploadFile(url, path string) error {
 	}
 	defer file.Close()
 
-	io.Copy(fileWriter, file)
-	// boundary := bodyWriter.Boundary()
-	// closeBuf := bytes.NewBufferString(fmt.Sprintf("\r\n--%s--\r\n", boundary))
+	// io.Copy(fileWriter, file)
+	p := make([]byte, 300)
+	_, err = file.Read(p)
+	if err != nil {
+		return err
+	}
+	_, err = fileWriter.Write(p)
+	if err != nil {
+		return err
+	}
+	boundary := bodyWriter.Boundary()
+	closeBuf := bytes.NewBufferString(fmt.Sprintf("\r\n--%s--\r\n", boundary))
 
-	// requestReader := io.MultiReader(bodyBuffer, file, closeBuf)
+	requestReader := io.MultiReader(bodyBuffer, closeBuf)
+
 	contentType := bodyWriter.FormDataContentType()
 	bodyWriter.Close()
-	_, err = web.Post(url, contentType, bodyBuffer)
+	_, err = web.Post(url, contentType, requestReader)
 	if err != nil {
 		return err
 	}
