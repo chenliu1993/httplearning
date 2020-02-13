@@ -37,11 +37,16 @@ func main() {
 	}
 	defer f.Close()
 	f.Write([]byte(content))
-	fmt.Printf("response content is:\n%s\n", content)
-	// content, err = client.InfoAboutMe(addr + "/publickey")
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
 	// fmt.Printf("response content is:\n%s\n", content)
+	content, err = client.InfoAboutMe(addr + "/publickey")
+	if err != nil {
+		log.Fatal(err)
+	}
+	f, err = os.OpenFile("key_web.txt", os.O_WRONLY|os.O_CREATE, 0766)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer f.Close()
+	f.Write([]byte(content))
 	return
 }
