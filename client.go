@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/chenliu1993/httplearning/utils"
 )
@@ -26,17 +27,17 @@ func main() {
 	// if err := client.UploadData(addr+"/upload", user); err != nil {
 	// 	log.Fatal(err)
 	// }
-	// content, err := client.InfoAboutMe(addr + "/me")
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// f, err := os.OpenFile("./resume.pdf.asc", os.O_WRONLY|os.O_CREATE, 0766)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// defer f.Close()
-	// f.Write([]byte(content))
-	// fmt.Printf("response content is:\n%s\n", content)
+	content, err := client.InfoAboutMe(addr + "/me")
+	if err != nil {
+		log.Fatal(err)
+	}
+	f, err := os.OpenFile("resume_web.pdf", os.O_WRONLY|os.O_CREATE, 0766)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer f.Close()
+	f.Write([]byte(content))
+	fmt.Printf("response content is:\n%s\n", content)
 	// content, err = client.InfoAboutMe(addr + "/publickey")
 	// if err != nil {
 	// 	log.Fatal(err)

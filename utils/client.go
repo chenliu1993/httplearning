@@ -89,6 +89,7 @@ func (web *WebClient) Post(url, contentType string, data io.Reader) (content str
 		return "", err
 	}
 	req.Header.Add("content-type", contentType)
+	req.Header.Set("resume", "true")
 	defer req.Body.Close()
 	resp, err := web.Client.Do(req)
 	if err != nil {
