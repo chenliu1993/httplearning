@@ -146,7 +146,8 @@ func GetPublicKey(w http.ResponseWriter, r *http.Request) {
 func RequestLog(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		glog.Infof("Requestt received, The Method is " + r.Method + ". The URL is " + r.URL.String() + ", The proto is " + r.Proto)
-		next.ServeHTTP(w, r)
 		glog.Infof("Request transmitted to next level")
+		next.ServeHTTP(w, r)
+		glog.Infof("Request serve done")
 	})
 }
