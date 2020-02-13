@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/golang/glog"
 	"github.com/gorilla/mux"
 )
 
@@ -61,14 +62,15 @@ func (server *WebServer) VerifyClient(crtPath string, doubleVerify bool) {
 func HelloWorld(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Hello World from golang http!")
 	w.WriteHeader(http.StatusOK)
-	log.Printf("Hello World")
 }
 
 // Upload uploads content to server.
 func Upload(w http.ResponseWriter, r *http.Request) {
+	glog.Infof("Begin uploading files")
 	reader, err := r.MultipartReader()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		glog.Errorf("Upload: getting reader failed: %v", err)
 		return
 	}
 	for {
@@ -85,6 +87,7 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 			dst, err := os.Create(filepath.Join(DefaultFiles, filename[len(filename)-1]+".upload"))
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
+				glog.Errorf("Upload: writtting to files: %v", err)
 				return
 			}
 			defer dst.Close()
@@ -92,53 +95,58 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	w.WriteHeader(http.StatusOK)
-	log.Println("upload")
+	glog.Infof("Finish uploading files")
 }
 
 // Me returns my info.
 func Me(w http.ResponseWriter, r *http.Request) {
-	// if r.Header.Get("resume") == "" {
-	// 	http.Error(w, fmt.Errorf("wrong request header").Error(), http.StatusBadRequest)
-	// 	return
-	// }
-	meinfo, err := ioutil.ReadFile("/Users/cliu2/Documents/gopath/src/github.com/chenliu1993/my.pdf.asc")
+	if r.Header.Get("resume") == "" {
+		http.Error(w, fmt.Errorf("wrong request header").Error(), http.StatusBadRequest)
+		glog.Errorf("Me: request header doesn't have resume field: %v", fmt.Errorf("wrong request header"))
+		return
+	}
+	meinfo, err := ioutil.ReadFile("/Users/cliu2/Documents/gopath/src/github.com/chenliu1993/my.pdf")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		glog.Errorf("Me: read resume failed: %v", err)
 		return
 	}
 	_, err = w.Write(meinfo)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		glog.Errorf("Me: write to response error: %v", err)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "text/plain")
-	log.Println("me")
+	glog.Infof("Finish getting resume")
 }
 
 // GetPublicKey gets my public key.
 func GetPublicKey(w http.ResponseWriter, r *http.Request) {
+	glog.Infof("GetPublicKey: Begin processing requests")
 	mykey, err := ioutil.ReadFile("/Users/cliu2/Documents/gopath/src/github.com/chenliu1993/httplearning/my.key")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		glog.Errorf("GetPublicKey: read public key file wroong: %v", err)
 		return
 	}
 	_, err = w.Write(mykey)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		glog.Errorf("GetPublicKey: write to the response wrong: %v", err)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "text/plain")
-	log.Println("key")
+	glog.Infof("GetPublicKey: responsing key finished")
 }
 
 // RequestLog records the request info
 func RequestLog(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println("request received")
-		log.Println("The Method is " + r.Method + ". The URL is " + r.URL.String() + ", The proto is " + r.Proto)
+		glog.Infof("Requestt received, The Method is " + r.Method + ". The URL is " + r.URL.String() + ", The proto is " + r.Proto)
 		next.ServeHTTP(w, r)
-		log.Println("request served done")
+		glog.Infof("Request transmitted to next level")
 	})
 }
