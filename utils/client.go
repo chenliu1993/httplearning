@@ -146,7 +146,7 @@ func (web *WebClient) UploadFile(url, path string) error {
 	}
 	boundary := bodyWriter.Boundary()
 	closeBuf := bytes.NewBufferString(fmt.Sprintf("\r\n--%s--\r\n", boundary))
-
+	// only last messages need a closeBuf at the end.
 	requestReader := io.MultiReader(bodyBuffer, closeBuf)
 
 	contentType := bodyWriter.FormDataContentType()

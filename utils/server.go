@@ -9,8 +9,15 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/gorilla/mux"
+)
+
+const (
+	// DefaultFiles used for store files received from net.
+	DefaultFiles = "/tmp/webfiles"
 )
 
 // WebServer is the server end of http server.
@@ -74,7 +81,8 @@ func Upload(w http.ResponseWriter, r *http.Request) {
 			data, _ := ioutil.ReadAll(part)
 			fmt.Printf("FormData:%s\n", string(data))
 		} else {
-			dst, err := os.Create(part.FileName() + ".upload")
+			filename := strings.Split(part.FileName(), "/")
+			dst, err := os.Create(filepath.Join(DefaultFiles, filename[len(filename)-1]+".upload"))
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -129,6 +137,7 @@ func GetPublicKey(w http.ResponseWriter, r *http.Request) {
 func RequestLog(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Println("request received")
+		log.Println("The Method is " + r.Method + ". The URL is " + r.URL.String() + ", The proto is " + r.Proto)
 		next.ServeHTTP(w, r)
 		log.Println("request served done")
 	})

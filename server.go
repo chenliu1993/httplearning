@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
 
 	"github.com/chenliu1993/httplearning/utils"
 	"github.com/gorilla/mux"
@@ -18,7 +19,10 @@ func main() {
 	router.Handle("/upload", alice.New(utils.RequestLog).Then(http.HandlerFunc(utils.Upload)))
 	// router.Handle("/me", alice.New(utils.RequestLog).Then(http.HandlerFunc(utils.Me)))
 	router.Handle("/publickey", alice.New(utils.RequestLog).Then(http.HandlerFunc(utils.GetPublicKey)))
-	// router.Handle("/tmp", alice.New(utils.RequestLog).Then(http.StripPrefix("/tmp", http.FileServer(http.Dir("/home/cliu2/Documents/tmp")))))
+	if err := os.MkdirAll(utils.DefaultFiles, os.FileMode(0644)); err != nil {
+		log.Fatal(err)
+	}
+	router.Handle("/files", alice.New(utils.RequestLog).Then(http.StripPrefix("/files", http.FileServer(http.Dir(utils.DefaultFiles)))))
 	server := utils.NewServer(router, addr)
 	// // Dealing with verifiying
 	// server.VerifyClient("ca.crt", false)
