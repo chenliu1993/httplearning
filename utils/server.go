@@ -3,6 +3,7 @@ package utils
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -13,7 +14,13 @@ import (
 	"strings"
 
 	"github.com/golang/glog"
+	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+	"gopkg.in/oauth2.v3/errors"
+	"gopkg.in/oauth2.v3/manage"
+	"gopkg.in/oauth2.v3/models"
+	"gopkg.in/oauth2.v3/server"
+	"gopkg.in/oauth2.v3/store"
 )
 
 const (
@@ -56,6 +63,56 @@ func (server *WebServer) VerifyClient(crtPath string, doubleVerify bool) {
 		}
 	}
 	server.Server.TLSConfig = tlsconfig
+}
+
+// AddOAuth adds a OAuth for server.
+func AddOAuth() (*server.Server, http.HandlerFunc, http.HandlerFunc, func(h http.Handler) http.Handler) {
+	manager := manage.NewDefaultManager()
+	manager.SetAuthorizeCodeTokenCfg(manage.DefaultAuthorizeCodeTokenCfg)
+	manager.MustTokenStorage(store.NewMemoryTokenStore())
+	clientStore := store.NewClientStore()
+	manager.MapClientStorage(clientStore)
+	manager.SetRefreshTokenCfg(manage.DefaultRefreshTokenCfg)
+	srv := server.NewDefaultServer(manager)
+	srv.SetAllowGetAccessRequest(true)
+	srv.SetClientInfoHandler(server.ClientFormHandler)
+	srv.SetInternalErrorHandler(func(err error) (re *errors.Response) {
+		glog.Errorf("Internal Error: %v", err)
+		return
+	})
+	srv.SetResponseErrorHandler(func(re *errors.Response) {
+		glog.Errorf("Response Error: %v", re.Error.Error())
+	})
+	tokenHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		srv.HandleTokenRequest(w, r)
+	})
+	credentialHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		clientID := uuid.New().String()[:8]
+		clientSecret := uuid.New().String()[:8]
+		err := clientStore.Set(clientID, &models.Client{
+			ID:     clientID,
+			Secret: clientSecret,
+			Domain: "http://127.0.0.1:8088",
+		})
+		if err != nil {
+			glog.Errorf("Set client credentials wrong: %v", err)
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{"CLIENT_ID": clientID, "CLIENT_SECRET": clientSecret})
+	})
+	validateHandler := func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			_, err := srv.ValidationBearerToken(r)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				glog.Errorf("Error: %v", err)
+				return
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
+
+	return srv, tokenHandler, credentialHandler, validateHandler
 }
 
 // HelloWorld is the test hanlder function for server.
