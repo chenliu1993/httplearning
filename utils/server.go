@@ -92,7 +92,7 @@ func AddOAuth() (*server.Server, http.HandlerFunc, http.HandlerFunc, func(h http
 		err := clientStore.Set(clientID, &models.Client{
 			ID:     clientID,
 			Secret: clientSecret,
-			Domain: "http://127.0.0.1:8088",
+			Domain: "http://127.0.0.1:8808",
 		})
 		if err != nil {
 			glog.Errorf("Set client credentials wrong: %v", err)

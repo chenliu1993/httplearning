@@ -30,7 +30,7 @@ func main() {
 	router.Handle("/me", alice.New(utils.RequestLog).Then(http.HandlerFunc(utils.Me)))
 	router.Handle("/publickey", alice.New(utils.RequestLog).Then(http.HandlerFunc(utils.GetPublicKey)))
 	router.Handle("/token", alice.New(utils.RequestLog, validateHandler).Then(tokenHandler))
-	router.Handle("/credentials", alice.New(utils.RequestLog, validateHandler).Then(credentialsHandler))
+	router.Handle("/credentials", alice.New(utils.RequestLog).Then(credentialsHandler))
 	if err := os.MkdirAll(utils.DefaultFiles, os.FileMode(0644)); err != nil {
 		glog.Errorf("Server error: %v", err)
 	}
