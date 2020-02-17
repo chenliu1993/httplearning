@@ -16,18 +16,20 @@ func main() {
 	user["lisa"] = "1"
 	addr := "http://127.0.0.1:8808"
 	file := "/Users/cliu2/Documents/gopath/src/github.com/chenliu1993/yabo.txt"
-	resp, err := client.Get(addr + "/helloworld")
+
+	token, err := client.GetClientToken(addr)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf(resp + "\n")
-	if err := client.UploadFile(addr+"/upload", file); err != nil {
+	fmt.Println(token)
+	_, err = client.Get(addr+"/helloworld", token)
+	if err != nil {
 		log.Fatal(err)
 	}
-	// if err := client.UploadData(addr+"/upload", user); err != nil {
-	// 	log.Fatal(err)
-	// }
-	content, err := client.InfoAboutMe(addr + "/me")
+	if err := client.UploadFile(addr+"/upload", file, token); err != nil {
+		log.Fatal(err)
+	}
+	content, err := client.InfoAboutMe(addr+"/me", token)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -37,8 +39,7 @@ func main() {
 	}
 	defer f.Close()
 	f.Write([]byte(content))
-	// fmt.Printf("response content is:\n%s\n", content)
-	content, err = client.InfoAboutMe(addr + "/publickey")
+	content, err = client.InfoAboutMe(addr+"/publickey", token)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -68,8 +69,13 @@ func (web *WebClient) AddVerification(skip bool, caCrtPath, cliCrtPath, cliKeyPa
 }
 
 // Get implements the get method.
-func (web *WebClient) Get(url string) (response string, err error) {
-	resp, err := web.Client.Get(url)
+func (web *WebClient) Get(url, token string) (response string, err error) {
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return "", err
+	}
+	req.Header.Add("Authorization", token)
+	resp, err := web.Client.Do(req)
 	if err != nil {
 		return "", err
 	}
@@ -122,7 +128,7 @@ func (web *WebClient) Put(url, contentType, token string, data io.Reader) (conte
 }
 
 // UploadFile uploads file to the server.
-func (web *WebClient) UploadFile(url, path string) error {
+func (web *WebClient) UploadFile(url, path, token string) error {
 	bodyBuffer := &bytes.Buffer{}
 	bodyWriter := multipart.NewWriter(bodyBuffer)
 	fileWriter, err := bodyWriter.CreateFormFile("files", path)
@@ -152,7 +158,13 @@ func (web *WebClient) UploadFile(url, path string) error {
 
 	contentType := bodyWriter.FormDataContentType()
 	bodyWriter.Close()
-	_, err = web.Post(url, contentType, requestReader)
+	req, err := http.NewRequest("POST", url, requestReader)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("content-type", contentType)
+	req.Header.Set("authorization", token)
+	_, err = web.Client.Do(req)
 	if err != nil {
 		return err
 	}
@@ -177,26 +189,42 @@ func (web *WebClient) UploadData(url string, data map[string]string) error {
 }
 
 // InfoAboutMe requires info about me.
-func (web *WebClient) InfoAboutMe(url string) (string, error) {
+func (web *WebClient) InfoAboutMe(url, token string) (string, error) {
 	bodyBuffer := &bytes.Buffer{}
 	bodyBuffer.Write([]byte("requires my resume"))
-	contentType := "text/plain"
-	content, err := web.Post(url, contentType, bodyBuffer)
+	req, err := http.NewRequest("POST", url, bodyBuffer)
 	if err != nil {
 		return "", err
 	}
+	req.Header.Set("content-type", "text/plain")
+	req.Header.Set("authorization", token)
+	resp, err := web.Client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	result, err := ioutil.ReadAll(resp.Body)
+	content := string(result)
 	return content, nil
 }
 
 // GetKey gets key for decrypt my resume.
-func (web *WebClient) GetKey(url string) (string, error) {
+func (web *WebClient) GetKey(url, token string) (string, error) {
 	bodyBuffer := &bytes.Buffer{}
 	bodyBuffer.Write([]byte("requires my key"))
-	contentType := "text/plain"
-	content, err := web.Post(url, contentType, bodyBuffer)
+	req, err := http.NewRequest("POST", url, bodyBuffer)
 	if err != nil {
 		return "", err
 	}
+	req.Header.Set("content-type", "text/plain")
+	req.Header.Set("authorization", token)
+	resp, err := web.Client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	result, err := ioutil.ReadAll(resp.Body)
+	content := string(result)
 	return content, nil
 }
 
@@ -225,4 +253,47 @@ func GetLocalIP(ifname string) (string, error) {
 		return localIP, fmt.Errorf("local interface doesn't have an ip")
 	}
 	return localIP, nil
+}
+
+// GetClientInfo gets clients' info
+func (web *WebClient) GetClientInfo(url string) (string, string, error) {
+	resp, err := web.Client.Get(url)
+	if err != nil {
+		return "", "", err
+	}
+	defer resp.Body.Close()
+	var respContent map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&respContent); err != nil {
+		return "", "", err
+	}
+	clientID := respContent["CLIENT_ID"].(string)
+	clientSecret := respContent["CLIENT_SECRET"].(string)
+	return clientID, clientSecret, nil
+}
+
+// GetClientToken gets token string back.
+// Note thsat url here is the root path.
+func (web *WebClient) GetClientToken(url string) (string, error) {
+	clientID, clientSecret, err := web.GetClientInfo(url + "/credentials")
+	if err != nil {
+		return "", err
+	}
+	req, err := http.NewRequest("GET", url+"/token", nil)
+	if err != nil {
+		return "", err
+	}
+	fmt.Println(clientID + "  " + clientSecret)
+	req.Header.Set("Client_ID", clientID)
+	req.Header.Set("Client_Secret", clientSecret)
+	resp, err := web.Client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	result, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+	token := string(result)
+	return token, nil
 }
