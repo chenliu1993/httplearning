@@ -282,7 +282,6 @@ func (web *WebClient) GetClientToken(url string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	fmt.Println(clientID + "  " + clientSecret)
 	req.Header.Set("Client_ID", clientID)
 	req.Header.Set("Client_Secret", clientSecret)
 	resp, err := web.Client.Do(req)

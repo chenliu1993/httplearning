@@ -21,15 +21,15 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(token)
-	_, err = client.Get(addr+"/helloworld", token)
+	content, err := client.Get(addr+"/helloworld", token)
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Println(content)
 	if err := client.UploadFile(addr+"/upload", file, token); err != nil {
 		log.Fatal(err)
 	}
-	content, err := client.InfoAboutMe(addr+"/me", token)
+	content, err = client.InfoAboutMe(addr+"/me", token)
 	if err != nil {
 		log.Fatal(err)
 	}
