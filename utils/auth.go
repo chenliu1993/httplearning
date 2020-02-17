@@ -47,9 +47,7 @@ func (server *WebServer) Token(w http.ResponseWriter, r *http.Request) {
 	if val == clientSecret {
 		server.CToken[token] = clientID
 	}
-	fmt.Println(server.CStore[clientID])
 	go server.DelayTokenExisting(10, token)
-	fmt.Println(server.CStore[clientID])
 	w.Write([]byte(token))
 }
 
