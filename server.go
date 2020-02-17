@@ -26,7 +26,7 @@ func main() {
 	addr := fmt.Sprintf(":%d", utils.DefaultVMPort)
 	server := utils.NewServer(router, addr)
 	router.Handle("/token", alice.New(utils.RequestLog).Then(http.HandlerFunc(server.Token)))
-	router.Handle("/credentials", alice.New(utils.RequestLog).Then(http.HandlerFunc(server.Credentials)))
+	router.Handle("/register", alice.New(utils.RequestLog).Then(http.HandlerFunc(server.Credentials)))
 	router.Handle("/helloworld", alice.New(utils.RequestLog).Then(http.HandlerFunc(utils.HelloWorld)))
 	router.Handle("/upload", alice.New(utils.RequestLog, server.Validate).Then(http.HandlerFunc(utils.Upload)))
 	router.Handle("/me", alice.New(utils.RequestLog, server.Validate).Then(http.HandlerFunc(utils.Me)))
