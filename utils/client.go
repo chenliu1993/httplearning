@@ -274,7 +274,7 @@ func (web *WebClient) GetClientInfo(url string) (string, string, error) {
 // GetClientToken gets token string back.
 // Note thsat url here is the root path.
 func (web *WebClient) GetClientToken(url string) (string, error) {
-	clientID, clientSecret, err := web.GetClientInfo(url + "/credentials")
+	clientID, clientSecret, err := web.GetClientInfo(url + "/register")
 	if err != nil {
 		return "", err
 	}
