@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/golang/glog"
 	"github.com/google/uuid"
@@ -46,6 +47,9 @@ func (server *WebServer) Token(w http.ResponseWriter, r *http.Request) {
 	if val == clientSecret {
 		server.CToken[token] = clientID
 	}
+	fmt.Println(server.CStore[clientID])
+	go server.DelayTokenExisting(10, token)
+	fmt.Println(server.CStore[clientID])
 	w.Write([]byte(token))
 }
 
@@ -73,4 +77,11 @@ func (server *WebServer) Validate(next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+// DelayTokenExisting defines token life-existence time.
+func (server *WebServer) DelayTokenExisting(exists int, token string) {
+	time.Sleep(time.Duration(exists) * time.Second)
+	delete(server.CStore, server.CToken[token])
+	delete(server.CToken, token)
 }

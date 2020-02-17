@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/chenliu1993/httplearning/utils"
 )
@@ -22,6 +23,7 @@ func main() {
 		log.Fatal(err)
 	}
 	fmt.Println(token)
+	time.Sleep(time.Duration(15) * time.Second)
 	_, err = client.Get(addr+"/helloworld", token)
 	if err != nil {
 		log.Fatal(err)
