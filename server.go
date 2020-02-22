@@ -27,14 +27,14 @@ func main() {
 	server := utils.NewServer(router, addr)
 	router.Handle("/token", alice.New(utils.RequestLog).Then(http.HandlerFunc(server.Token)))
 	router.Handle("/register", alice.New(utils.RequestLog).Then(http.HandlerFunc(server.Credentials)))
-	router.Handle("/helloworld", alice.New(utils.RequestLog).Then(http.HandlerFunc(utils.HelloWorld)))
+	router.Handle("/helloworld", alice.New(utils.RequestLog, server.Validate).Then(http.HandlerFunc(utils.HelloWorld)))
 	router.Handle("/upload", alice.New(utils.RequestLog, server.Validate).Then(http.HandlerFunc(utils.Upload)))
 	router.Handle("/me", alice.New(utils.RequestLog, server.Validate).Then(http.HandlerFunc(utils.Me)))
 	router.Handle("/publickey", alice.New(utils.RequestLog).Then(http.HandlerFunc(utils.GetPublicKey)))
 	if err := os.MkdirAll(utils.DefaultFiles, os.FileMode(0644)); err != nil {
 		glog.Errorf("Server error: %v", err)
 	}
-	router.Handle("/files", alice.New(utils.RequestLog).Then(http.StripPrefix("/files", http.FileServer(http.Dir(utils.DefaultFiles)))))
+	router.Handle("/files", alice.New(utils.RequestLog).Then(http.StripPrefix("/files", http.FileServer(http.Dir("/tmp/liuchen.work")))))
 	// Dealing with verifiying
 	// server.VerifyClient("ca.crt", false)
 	listener, err := net.Listen("tcp", addr)

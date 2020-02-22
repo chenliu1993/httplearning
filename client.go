@@ -14,7 +14,7 @@ func main() {
 	// client.AddVerification(false, "ca.crt", "client.crt", "client.key")
 	user := make(map[string]string)
 	user["lisa"] = "1"
-	addr := "http://127.0.0.1:8808"
+	addr := "http://api.liuchen.work:8000"
 	file := "/Users/cliu2/Documents/gopath/src/github.com/chenliu1993/yabo.txt"
 
 	token, err := client.GetClientToken(addr)
