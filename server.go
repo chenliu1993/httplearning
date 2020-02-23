@@ -22,6 +22,10 @@ func setLogLevel() {
 func main() {
 	setLogLevel()
 	defer glog.Flush()
+	if err := os.MkdirAll(utils.DefaultFiles, os.FileMode(0766)); err != nil {
+		glog.Errorf("Failed for creating uploading folders: %v", err)
+		return
+	}
 	router := mux.NewRouter()
 	addr := fmt.Sprintf(":%d", utils.DefaultVMPort)
 	server := utils.NewServer(router, addr)
@@ -34,7 +38,7 @@ func main() {
 	if err := os.MkdirAll(utils.DefaultFiles, os.FileMode(0644)); err != nil {
 		glog.Errorf("Server error: %v", err)
 	}
-	router.Handle("/files", alice.New(utils.RequestLog).Then(http.StripPrefix("/files", http.FileServer(http.Dir("/tmp/liuchen.work")))))
+	router.Handle("/files", alice.New(utils.RequestLog).Then(http.StripPrefix("/files", http.FileServer(http.Dir(utils.DefaultFiles)))))
 	// Dealing with verifiying
 	// server.VerifyClient("ca.crt", false)
 	listener, err := net.Listen("tcp", addr)
